@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 
@@ -8,6 +10,8 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(RolesGuard)
+  @Roles('Admin')
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.usersService.createPublic(dto);
