@@ -43,8 +43,8 @@ export class TicketsService {
     }
 
     const combinedText = `${dto.title} ${dto.description}`;
-    const aiClassification = this.aiService.classifyTicket(combinedText);
-    const summary = this.aiService.summarizeTicket(dto.description);
+    const aiClassification = await this.aiService.classifyTicket(combinedText);
+    const summary = await this.aiService.summarizeTicket(dto.description);
     const assignmentRole = this.aiService.suggestAssignment(aiClassification.category);
 
     let category = await this.categoriesService.findByName(aiClassification.category);

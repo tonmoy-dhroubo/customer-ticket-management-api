@@ -1,4 +1,4 @@
-# Ticket Backend (NestJS + PostgreSQL + Mock AI)
+# Ticket Backend (NestJS + PostgreSQL + Gemini AI)
 
 Backend for the AI-powered ticket management screening project.
 
@@ -9,11 +9,11 @@ Backend for the AI-powered ticket management screening project.
 - Ticket CRUD + AI-enriched ticket creation
 - Customer and category management
 - Ticket comments
-- Mock AI services:
-  - Classification (`Billing`, `Bug`, `Feature Request`, fallback `Support`)
-  - Priority inference
-  - Summary generation (first 1-2 sentences, max ~150 chars)
-  - Assignment suggestion by category
+- AI services:
+  - Gemini-powered classification + summary generation
+  - Deterministic fallback if Gemini is unavailable
+  - Category set: `Billing`, `Bug`, `Feature Request`, fallback `Support`
+  - Priority inference + assignment suggestion by category
 
 ## Tech Stack
 
@@ -49,7 +49,7 @@ Server starts on `http://localhost:3000`.
 
 - Default config points to local Postgres.
 - `DATABASE_URL` is supported (recommended for Neon/Supabase/Render Postgres).
-- `DB_SYNC=true` auto-creates tables in development.
+- `DB_SYNC=false` is recommended for production.
 - On startup, default `roles` and `categories` are seeded.
 - On startup, a default admin is seeded using `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`.
 
@@ -88,7 +88,7 @@ Server starts on `http://localhost:3000`.
 Backend flow:
 
 1. Validate input + creator/customer
-2. Run mock AI classification and summary
+2. Run AI classification and summary
 3. Resolve category + suggested assignment role
 4. Save AI results (`ai_confidence`, `ai_source`, `summary`)
 5. Persist ticket
@@ -138,6 +138,8 @@ Add these in Railway `Variables` tab:
 - `DATABASE_URL` = your Neon/Postgres connection string
 - `JWT_SECRET` = strong random secret
 - `JWT_EXPIRES_IN` = `7d`
+- `GEMINI_API_KEY` = your Google AI Studio API key
+- `GEMINI_MODEL` = `gemini-2.5-flash`
 - `DB_SYNC` = `false`
 - `ADMIN_NAME` = `System Admin`
 - `ADMIN_EMAIL` = `admin@ticket.local`
