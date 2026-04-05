@@ -28,7 +28,7 @@ import { UsersModule } from './users/users.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
-        const synchronize = configService.get<string>('DB_SYNC', 'true') === 'true';
+        const synchronize = configService.get<string>('DB_SYNC', 'false') === 'true';
 
         if (databaseUrl) {
           return {

@@ -107,3 +107,59 @@ npm run seed
 ```
 
 This resets and repopulates `roles`, `users`, `customers`, `categories`, `tickets`, and `ticket_comments`.
+
+## Deploy To Railway (Detailed)
+
+### 1. Push API code
+
+Make sure this backend repo is pushed to GitHub:
+
+- `git@github.com:tonmoy-dhroubo/customer-ticket-management-api.git`
+
+### 2. Create Railway project
+
+1. Log in to Railway.
+2. Click `New Project`.
+3. Select `Deploy from GitHub repo`.
+4. Choose `customer-ticket-management-api`.
+5. Railway will create one service for this repo.
+
+### 3. Set build/start commands
+
+In service settings:
+
+- Build Command: `npm install && npm run build`
+- Start Command: `npm run start:prod`
+
+### 4. Set environment variables
+
+Add these in Railway `Variables` tab:
+
+- `DATABASE_URL` = your Neon/Postgres connection string
+- `JWT_SECRET` = strong random secret
+- `JWT_EXPIRES_IN` = `7d`
+- `DB_SYNC` = `false`
+- `ADMIN_NAME` = `System Admin`
+- `ADMIN_EMAIL` = `admin@ticket.local`
+- `ADMIN_PASSWORD` = `admin123456` (change in production)
+
+Do not set `PORT`; Railway provides it automatically.
+
+### 5. Deploy
+
+1. Trigger a deploy (or it auto-deploys after variable save).
+2. Open logs and confirm:
+   - app starts successfully
+   - database connection succeeds
+
+### 6. Verify API
+
+Use your Railway public URL:
+
+- `GET /` should return health response
+- `POST /auth/login` with admin credentials should return JWT
+- `GET /auth/me` with bearer token should return current user
+
+### 7. Optional: seed demo data
+
+`npm run seed` truncates and repopulates tables. Use only when you intentionally want demo reset.
