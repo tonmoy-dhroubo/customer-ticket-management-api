@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, UseGuards
 import { Request } from 'express';
 import { CustomerJwtAuthGuard } from '../common/guards/customer-jwt-auth.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ClassifyTicketDto } from './dto/classify-ticket.dto';
 import { CreateCustomerTicketDto } from './dto/create-customer-ticket.dto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
@@ -15,6 +16,12 @@ export class TicketsController {
   @Post()
   create(@Body() dto: CreateTicketDto) {
     return this.ticketsService.create(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('classify')
+  classify(@Body() dto: ClassifyTicketDto) {
+    return this.ticketsService.classifyPreview(dto);
   }
 
   @UseGuards(JwtAuthGuard)

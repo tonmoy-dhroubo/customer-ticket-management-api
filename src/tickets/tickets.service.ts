@@ -17,6 +17,11 @@ interface CreateCustomerTicketInput {
   description: string;
 }
 
+interface ClassificationPreviewInput {
+  title: string;
+  description: string;
+}
+
 @Injectable()
 export class TicketsService {
   constructor(
@@ -78,6 +83,35 @@ export class TicketsService {
 
     const saved = await this.ticketRepository.save(ticket);
     return this.findOne(saved.id);
+  }
+
+  async classifyPreview(payload: ClassificationPreviewInput) {
+    const combinedText = `${payload.title} ${payload.description}`;
+    const aiClassification = await this.aiService.classifyTicket(combinedText);
+    const summary = await this.aiService.summarizeTicket(payload.description);
+    const assignmentRole = this.aiService.suggestAssignment(aiClassification.category);
+
+    let category = await this.categoriesService.findByName(aiClassification.category);
+    if (!category) {
+      category = await this.categoryRepository.save(this.categoryRepository.create({ name: 'Support' }));
+    }
+
+    const role = await this.rolesService.findByName(assignmentRole);
+    const assignee = role
+      ? await this.userRepository.findOne({ where: { roleId: role.id }, order: { createdAt: 'ASC' } })
+      : null;
+
+    return {
+      categoryId: category.id,
+      categoryName: category.name,
+      priority: aiClassification.priority,
+      confidence: aiClassification.confidence,
+      source: aiClassification.source,
+      summary,
+      assignmentRole,
+      suggestedAssigneeId: assignee?.id ?? null,
+      suggestedAssigneeName: assignee?.name ?? null,
+    };
   }
 
   async createForCustomer(customerId: number, payload: CreateCustomerTicketInput) {
