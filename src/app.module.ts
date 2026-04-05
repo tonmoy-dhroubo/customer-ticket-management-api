@@ -15,6 +15,7 @@ import { TicketComment } from './database/entities/ticket-comment.entity';
 import { Ticket } from './database/entities/ticket.entity';
 import { User } from './database/entities/user.entity';
 import { CustomersModule } from './customers/customers.module';
+import { CustomerAuthModule } from './customer-auth/customer-auth.module';
 import { RolesModule } from './roles/roles.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { UsersModule } from './users/users.module';
@@ -59,6 +60,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     RolesModule,
     CustomersModule,
+    CustomerAuthModule,
     CategoriesModule,
     TicketsModule,
     CommentsModule,

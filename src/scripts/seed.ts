@@ -32,6 +32,13 @@ type SeedUser = {
   roleName: string;
 };
 
+type SeedCustomer = {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+};
+
 async function main() {
   await dataSource.initialize();
 
@@ -82,13 +89,26 @@ async function main() {
 
   const userByEmail = new Map(users.map((user) => [user.email, user]));
 
-  const customers = await customerRepository.save([
-    customerRepository.create({ name: 'Acme Retail', email: 'ops@acmeretail.com', phone: '+1-202-555-0101' }),
-    customerRepository.create({ name: 'Northwind Health', email: 'help@northwindhealth.com', phone: '+1-202-555-0102' }),
-    customerRepository.create({ name: 'BlueRiver Tech', email: 'it@blueriver.tech', phone: '+1-202-555-0103' }),
-    customerRepository.create({ name: 'GreenMart', email: 'support@greenmart.io', phone: '+1-202-555-0104' }),
-    customerRepository.create({ name: 'Skyline ERP', email: 'admin@skylineerp.ai', phone: '+1-202-555-0105' }),
-  ]);
+  const customersInput: SeedCustomer[] = [
+    { name: 'Acme Retail', email: 'ops@acmeretail.com', phone: '+1-202-555-0101', password: 'customer123' },
+    { name: 'Northwind Health', email: 'help@northwindhealth.com', phone: '+1-202-555-0102', password: 'customer123' },
+    { name: 'BlueRiver Tech', email: 'it@blueriver.tech', phone: '+1-202-555-0103', password: 'customer123' },
+    { name: 'GreenMart', email: 'support@greenmart.io', phone: '+1-202-555-0104', password: 'customer123' },
+    { name: 'Skyline ERP', email: 'admin@skylineerp.ai', phone: '+1-202-555-0105', password: 'customer123' },
+  ];
+
+  const customers: Customer[] = [];
+  for (const input of customersInput) {
+    const passwordHash = await bcrypt.hash(input.password, 10);
+    const customer = customerRepository.create({
+      name: input.name,
+      email: input.email,
+      phone: input.phone,
+      passwordHash,
+    });
+
+    customers.push(await customerRepository.save(customer));
+  }
 
   const customerByName = new Map(customers.map((customer) => [customer.name, customer]));
 

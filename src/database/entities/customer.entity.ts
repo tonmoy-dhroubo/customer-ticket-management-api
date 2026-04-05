@@ -12,6 +12,9 @@ export class Customer {
   @Column({ unique: true })
   email!: string;
 
+  @Column({ type: 'varchar', name: 'password_hash', nullable: true, select: false })
+  passwordHash!: string | null;
+
   @Column({ type: 'varchar', nullable: true })
   phone!: string | null;
 

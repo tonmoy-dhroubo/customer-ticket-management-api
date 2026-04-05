@@ -12,6 +12,11 @@ import { RolesService } from '../roles/roles.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 
+interface CreateCustomerTicketInput {
+  title: string;
+  description: string;
+}
+
 @Injectable()
 export class TicketsService {
   constructor(
@@ -75,6 +80,46 @@ export class TicketsService {
     return this.findOne(saved.id);
   }
 
+  async createForCustomer(customerId: number, payload: CreateCustomerTicketInput) {
+    const customer = await this.customerRepository.findOne({ where: { id: customerId } });
+    if (!customer) {
+      throw new NotFoundException('Customer not found.');
+    }
+
+    const createdBy = await this.findFallbackCreatorUserId();
+    const combinedText = `${payload.title} ${payload.description}`;
+    const aiClassification = await this.aiService.classifyTicket(combinedText);
+    const summary = await this.aiService.summarizeTicket(payload.description);
+    const assignmentRole = this.aiService.suggestAssignment(aiClassification.category);
+
+    let category = await this.categoriesService.findByName(aiClassification.category);
+    if (!category) {
+      category = await this.categoryRepository.save(this.categoryRepository.create({ name: 'Support' }));
+    }
+
+    const role = await this.rolesService.findByName(assignmentRole);
+    const assignee = role
+      ? await this.userRepository.findOne({ where: { roleId: role.id }, order: { createdAt: 'ASC' } })
+      : null;
+
+    const ticket = this.ticketRepository.create({
+      title: payload.title,
+      description: payload.description,
+      status: TicketStatus.OPEN,
+      priority: aiClassification.priority,
+      categoryId: category.id,
+      createdBy,
+      assignedTo: assignee?.id ?? null,
+      customerId: customer.id,
+      aiConfidence: aiClassification.confidence,
+      aiSource: aiClassification.source,
+      summary,
+    });
+
+    const saved = await this.ticketRepository.save(ticket);
+    return this.findOne(saved.id);
+  }
+
   async findAll() {
     const tickets = await this.ticketRepository.find({
       relations: ['category', 'creator', 'assignee', 'customer'],
@@ -95,6 +140,16 @@ export class TicketsService {
     }
 
     return this.sanitizeTicket(ticket);
+  }
+
+  async findForCustomer(customerId: number) {
+    const tickets = await this.ticketRepository.find({
+      where: { customerId },
+      relations: ['category', 'creator', 'assignee', 'customer'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return tickets.map((ticket) => this.sanitizeTicket(ticket));
   }
 
   async update(id: number, dto: UpdateTicketDto) {
@@ -172,5 +227,25 @@ export class TicketsService {
       assignee,
       comments,
     };
+  }
+
+  private async findFallbackCreatorUserId(): Promise<number> {
+    const adminRole = await this.rolesService.findByName('Admin');
+    if (adminRole) {
+      const adminUser = await this.userRepository.findOne({
+        where: { roleId: adminRole.id },
+        order: { createdAt: 'ASC' },
+      });
+      if (adminUser) {
+        return adminUser.id;
+      }
+    }
+
+    const anyUser = await this.userRepository.findOne({ order: { createdAt: 'ASC' } });
+    if (!anyUser) {
+      throw new NotFoundException('No internal users found to create customer ticket.');
+    }
+
+    return anyUser.id;
   }
 }
